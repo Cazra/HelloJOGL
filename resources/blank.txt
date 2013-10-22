@@ -1,0 +1,3 @@
+This text file is only here so that the ant builder will be able to run. 
+It requires there to be a "resources" directory which normally contains
+graphics, sound, and other external resources for an application.
