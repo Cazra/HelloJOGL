@@ -46,6 +46,7 @@ public class SimpleScene implements GLEventListener {
     
     AnimatorBase animator = new FPSAnimator(60);
     animator.add(canvas);
+    animator.setUpdateFPSFrames(20, System.out);
     animator.start();
   }
   

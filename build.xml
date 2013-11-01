@@ -36,20 +36,26 @@ bin, lib, and other folders.</echo>
 	<!-- Perform all necessary initialization, set properties, create the
 		 classpath, etc. -->
 	<target name="init" depends="start,checks">
+    <property name="proj_name"    value="project"/>
 		<property name="build.base" 	value="."/>
 		<property name="build.src"  	value="${build.base}/src"/>
 		<property name="build.doc"  	value="${build.base}/doc"/>
 		<property name="build.bin"  	value="${build.base}/bin"/>
-        <property name="build.lib"  	value="${build.base}/lib"/>
+    <property name="build.lib"  	value="${build.base}/lib"/>
+    <property name="build.jogl"  	value="${build.base}/jogl"/>
 		<property name="build.resources" value="${build.base}/resources"/>
-		<property name="build.jar"		value="project.jar"/>
+		<property name="build.jar"		value="${proj_name}.jar"/>
 		<property name="build.latest"	value="${build.base}/latest"/>
+    <property name="build.dist"	value="${build.base}/dist"/>
     <property name="build.main"		value="project.SimpleScene"/>
 		<echo level="info">Using Java at ${env.JAVA_HOME}.</echo>
 		<path id="build.classpath">
 			<pathelement path="${java.class.path}"/>
 			<pathelement path="${build.bin}"/>
-            <fileset dir="${build.lib}">
+      <fileset dir="${build.lib}">
+				<include name="**/*.jar"/>
+			</fileset>
+      <fileset dir="${build.jogl}">
 				<include name="**/*.jar"/>
 			</fileset>
 		</path>
@@ -118,10 +124,9 @@ bin, lib, and other folders.</echo>
 		 jar.uptodate property.  This checks the latest jar file against
 		 the class files and supporting jar files in lib. -->
 	<target name="jar-check" depends="compile">
-		<uptodate property="jar.uptodate"
-			targetfile="${build.latest}/${build.jar}">
+		<uptodate property="jar.uptodate" targetfile="${build.latest}/${build.jar}">
 			<srcfiles dir="${build.bin}" includes="**/*.class"/>
-            <srcfiles dir="${build.lib}" includes="**/*.jar"/>
+      <srcfiles dir="${build.lib}" includes="**/*.jar"/>
 			<srcfiles dir="${build.resources}" includes="**/*.*"/>
 		</uptodate>
 	</target>
@@ -140,7 +145,7 @@ bin, lib, and other folders.</echo>
 			index			="true">
 			<fileset dir="${build.bin}"/>
 			<fileset dir="${build.resources}"/>
-            <archives>
+      <archives>
 				<zips>
 					<fileset dir="${build.lib}" includes="**/*.jar"/>
 				</zips>
@@ -152,4 +157,38 @@ bin, lib, and other folders.</echo>
 		</jar>
 		<echo level="info">New ${build.jar} built in ${build.latest}.</echo>
 	</target>
+  
+  
+  <!-- Build the jar files if they are out of date.  This builds a
+		 comprehensive jar file that contains all supporting jars from
+		 the lib folder.  It also packages up the current source. -->
+	<target name="dist" depends="jar-check" 
+		description="Build the jar file and copy the User's Guide into the jar's directory.">
+		<echo level="info">The ${build.jar} is out of date; rebuilding.</echo>
+		<mkdir dir="${build.dist}"/>
+		<jar filesetmanifest="mergewithoutmain" destfile="${build.dist}/${build.jar}" index="true">
+			<fileset dir="${build.bin}"/>
+			<fileset dir="${build.resources}"/>
+            <archives>
+				<zips>
+					<fileset dir="${build.lib}" includes="**/*.jar"/>
+          <fileset dir="${build.jogl}" includes="gluegen-rt.jar, jogl-all.jar"/>
+				</zips>
+			</archives>
+			<manifest>
+				<attribute name="Build-Date" value="${DSTAMP}"/>
+        <attribute name="Main-Class" value="${build.main}"/>
+			</manifest>
+		</jar>
+    <jar filesetmanifest="mergewithoutmain" destfile="${build.dist}/${proj_name}-natives-windows-amd64.jar" index="true">
+      <archives>
+				<zips>
+					<fileset dir="${build.jogl}" includes="gluegen-rt-natives-windows-amd64.jar, jogl-all-natives-windows-amd64.jar"/>
+				</zips>
+			</archives>
+		</jar>
+		<echo level="info">New ${build.jar} built in ${build.dist}.</echo>
+	</target>
+  
+  
 </project>
